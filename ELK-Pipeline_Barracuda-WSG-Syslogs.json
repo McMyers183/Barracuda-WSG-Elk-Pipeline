@@ -1,0 +1,89 @@
+[
+  {
+    "grok": {
+      "field": "message",
+      "patterns": [
+        "%{CUDA_SYSLOG:syslog_message}"
+      ],
+      "pattern_definitions": {
+        "CUDA_SYSLOG": "<\\d+> (?<syslog_program>\\w+): (?<syslog_timestamp>\\d+) \\d+ %{GREEDYDATA:syslog_message}"
+      },
+      "tag": "CUDA_SYSLOG"
+    }
+  },
+  {
+    "grok": {
+      "field": "message",
+      "patterns": [
+        "%{CUDA_HTTPSCAN:syslog_message}"
+      ],
+      "pattern_definitions": {
+        "CUDA_HTTPSCAN": "%{IP:src_ip} %{IP:dst_ip} %{DATA:content_type} \\d+\\.\\d+\\.\\d+\\.\\d+ (?<request>(?<request_protocol>\\w+)://(?<request_domain>[\\w\\.\\-]+)(:(?<request_port>\\d+))?(?<request_uri>[^\\s]+)) (?<data_size>\\d+) \\w+ %{WORD:action} %{WORD:reason}\\s+\\w+ (?<match_flag>\\d+) (?<time_qualified>\\d+) (?<action_type>\\d+) (?<source_type>\\d+) \\(%{DATA:src_detail}\\) (?<dest_type>\\d+) %{USERNAME:dest_detail} (?<spy_type>\\d+) %{DATA:spy_id} (?<infection_score>\\d+) (?<matched_part>[^\\s]+) %{NOTSPACE:matched_category} \\[%{NOTSPACE:user}\\]\\s+(?<referrer>(?<referrer_protocol>\\w+)://(?<referrer_domain>[\\w\\.\\-]+)(:(?<referrer_port>\\d+))?(?<referrer_uri>[^\\s]+)) [^\\s]+ (?<referrer_category>[^\\s]+)"
+      },
+      "if": "ctx.syslog_program == 'http_scan'",
+      "tag": "CUDA_HTTP"
+    }
+  },
+  {
+    "grok": {
+      "field": "message",
+      "patterns": [
+        "%{CUDA_PQMAN:syslog_message}"
+      ],
+      "pattern_definitions": {
+        "CUDA_PQMAN": "<\\d+> (?<syslog_program>\\w+): (?<syslog_timestamp>\\d+) \\d+ %{IP:src_ip} %{IP:dst_ip} %{DATA:content_type} \\d+\\.\\d+\\.\\d+\\.\\d+ (?<request>(?<request_protocol>\\w+)://(?<request_domain>[\\w\\.\\-]+))/ (?<data_size>\\d+) \\w+ %{WORD:action} %{WORD:reason}\\s+\\w+ (?<match_flag>\\d+) (?<time_qualified>\\d+) (?<action_type>\\d+) (?<source_type>\\d+) \\(%{DATA:src_detail}\\) (?<dest_type>\\d+) %{USERNAME:dest_detail} (?<spy_type>\\d+) %{DATA:spy_id} (?<infection_score>\\d+) (?<matched_part>[^\\s]+) %{NOTSPACE:matched_category} \\[%{NOTSPACE:user}\\]\\s+(?<referrer>(?<referrer_protocol>\\w+)://(?<referrer_domain>[\\w\\.\\-]+)(:(?<referrer_port>\\d+))?(?<referrer_uri>[^\\s]+))"
+      },
+      "if": "ctx.syslog_program == 'barracuda_pqman'"
+    }
+  },
+  {
+    "set": {
+      "field": "WebFilterAction",
+      "value": "allowed",
+      "if": "ctx.action_type == \"0\"",
+      "tag": "Cuda-WebFilterAction"
+    }
+  },
+  {
+    "set": {
+      "field": "WebFilterAction",
+      "value": "denied",
+      "if": "ctx.action_type == \"1\""
+    }
+  },
+  {
+    "set": {
+      "field": "WebFilterAction",
+      "value": "redirected",
+      "if": "ctx.action_type == \"2\""
+    }
+  },
+  {
+    "set": {
+      "field": "WebFilterAction",
+      "value": "rewritten",
+      "if": "ctx.action_type == \"3\""
+    }
+  },
+  {
+    "set": {
+      "field": "WebFilterAction",
+      "value": "rewritten",
+      "if": "ctx.action_type == \"4\""
+    }
+  },
+  {
+    "set": {
+      "field": "WebFilterAction",
+      "value": "allowed",
+      "if": "ctx.action_type == \"5\""
+    }
+  },
+  {
+    "set": {
+      "field": "WebFilterAction",
+      "value": "branched",
+      "if": "ctx.action_type == \"6\""
+    }
+  }
+]
